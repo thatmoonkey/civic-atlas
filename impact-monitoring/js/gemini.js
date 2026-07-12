@@ -1,15 +1,16 @@
 // Gemini integration — all generative steps (build brief §3, §6.3).
-// The actual API key never reaches the browser: the client calls a Netlify
-// Function (netlify/functions/gemini.js) which holds the real key server-side
-// and proxies the request to Google. Every request is framed by Dot's
-// persona, loaded from dot-persona.md so it can be edited without touching code.
+// The actual API key never reaches the browser: the client calls a Railway-
+// hosted proxy (civic-atlas-gemini-proxy repo, server.js) which holds the
+// real key server-side and proxies the request to Google. Every request is
+// framed by Dot's persona, loaded from dot-persona.md so it can be edited
+// without touching code.
 
-const FUNCTION_URL = "/.netlify/functions/gemini";
+const FUNCTION_URL = "https://civic-atlas-gemini-proxy-production.up.railway.app/api/gemini";
 
 export function hasKey() {
-  // Availability now depends on server config (GEMINI_API_KEY on Netlify),
+  // Availability now depends on server config (GEMINI_API_KEY on Railway),
   // which the client can't introspect without a round trip — assume yes and
-  // surface a real error if the function isn't configured.
+  // surface a real error if the proxy isn't configured.
   return true;
 }
 
