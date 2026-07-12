@@ -1,5 +1,5 @@
-import { el, toast, busy, dotAvatar, md, withCounter, voiceButton, MONTHS, currentYear, download } from "../ui.js";
-import { annualTotals, yearCoverage, save, debouncedSave } from "../store.js";
+import { el, toast, busy, dotAvatar, md, withCounter, voiceButton, monthLabel, currentYear, download } from "../ui.js";
+import { annualTotals, yearCoverage, periodMonthsForYear, periodYearForMonth, save, debouncedSave } from "../store.js";
 import { hasKey, draftAnnualNarrative } from "../gemini.js";
 
 // Annual report — totals roll-up, sparkline chart, time-capsule reflection,
@@ -23,7 +23,7 @@ export function renderReport(root, project, state) {
   stack.append(
     el("div", { class: "reveal no-print" },
       el("p", { class: "eyebrow" }, "Annual report"),
-      el("h1", {}, `The ${year} story`),
+      el("h1", {}, `The ${periodLabel(project, year)} story`),
       el("p", { class: "lede", style: "margin:8px 0 12px" }, "Everything you counted, rolled into one document — for your funder or just for the team."),
       yearStrip(project, state)
     )
@@ -33,7 +33,7 @@ export function renderReport(root, project, state) {
   stack.append(
     el("div", { class: "card reveal" },
       el("img", { src: "img/ca-wide.svg", alt: "Civic Atlas", style: "height:22px;display:block;margin-bottom:12px;opacity:0.85" }),
-      el("p", { class: "eyebrow" }, `Annual report · ${year}`),
+      el("p", { class: "eyebrow" }, `Annual report · ${periodLabel(project, year)}`),
       el("h2", {}, project.name),
       el("p", { style: "margin-top:8px;font-family:var(--font-display);font-size:1.05rem;line-height:1.4" }, project.vision),
       project.photo ? el("img", { class: "vision-photo", src: project.photo, alt: "Project photo" }) : null,
@@ -48,7 +48,7 @@ export function renderReport(root, project, state) {
     el("thead", {}, el("tr", {},
       el("th", {}, "What we counted"),
       el("th", { class: "num" }, "Unit"),
-      el("th", { class: "num" }, `Total ${year}`)
+      el("th", { class: "num" }, `Total ${periodLabel(project, year)}`)
     )),
     el("tbody", {}, ...rows.map((r) =>
       el("tr", {},
@@ -73,7 +73,8 @@ export function renderReport(root, project, state) {
     stack.append(
       el("div", { class: "card reveal" },
         el("h3", {}, "Month by month"),
-        el("p", { class: "small", style: "margin-top:4px" }, `Each bar is one month, ${MONTHS[0]}–${MONTHS[11]} ${year}.`),
+        el("p", { class: "small", style: "margin-top:4px" },
+          `Each bar is one month, ${monthLabel(periodMonthsForYear(project, year)[0], true)}–${monthLabel(periodMonthsForYear(project, year)[11], true)}.`),
         ...rows.map((r) =>
           el("div", { class: "spark-row" },
             el("div", { class: "row row--between" },
@@ -158,7 +159,7 @@ export function renderReport(root, project, state) {
         busy(genBtn, true, "Dot is writing…");
         try {
           refl.narrative = await draftAnnualNarrative(
-            project, year, rows,
+            project, periodLabel(project, year), rows,
             fullYear ? refl.evidence : "",
             { fullYear, monthsTracked }
           );
@@ -188,7 +189,7 @@ export function renderReport(root, project, state) {
       el("button", {
         class: "btn btn--ghost btn--block",
         onclick: () => {
-          download(`${project.name.replace(/\W+/g, "_")}_${year}.csv`, toCsv(rows, year));
+          download(`${project.name.replace(/\W+/g, "_")}_${year}.csv`, toCsv(project, rows, year));
           toast("CSV downloaded");
         },
       }, "⬇ Download data (CSV)")
@@ -198,9 +199,9 @@ export function renderReport(root, project, state) {
 
 /* year chips with data-coverage dots: none / some / most / full */
 function yearStrip(project, state) {
-  const years = new Set([currentYear()]);
-  if (project.startMonth) years.add(Number(project.startMonth.slice(0, 4)));
-  for (const k of Object.keys(project.months)) years.add(Number(k.slice(0, 4)));
+  const years = new Set();
+  years.add(project.startMonth ? Number(project.startMonth.slice(0, 4)) : currentYear());
+  for (const k of Object.keys(project.months)) years.add(periodYearForMonth(project, k));
   const sorted = [...years].sort((a, b) => b - a).slice(0, 4);
 
   return el("div", { class: "year-strip" },
@@ -213,16 +214,26 @@ function yearStrip(project, state) {
         onclick: () => { state.reportYear = y; state.rerender(); },
       },
         el("span", { class: `cov ${covCls}` }),
-        String(y)
+        periodLabel(project, y)
       );
     })
   );
 }
 
 function defaultYear(project) {
-  // prefer the most recent year that actually has data
-  const dataYears = Object.keys(project.months).map((k) => Number(k.slice(0, 4)));
-  return dataYears.length ? Math.max(...dataYears) : currentYear();
+  // prefer the most recent reporting year that actually has data
+  const dataYears = Object.keys(project.months).map((k) => periodYearForMonth(project, k));
+  if (dataYears.length) return Math.max(...dataYears);
+  return project.startMonth ? Number(project.startMonth.slice(0, 4)) : currentYear();
+}
+
+/* Human label for a reporting year: plain "2026" when the project starts in
+   January (matches the calendar year exactly), otherwise the real month
+   range, e.g. "Jul '26–Jun '27". */
+function periodLabel(project, year) {
+  const months = periodMonthsForYear(project, year);
+  const startsInJanuary = !project.startMonth || project.startMonth.slice(5, 7) === "01";
+  return startsInJanuary ? String(year) : `${monthLabel(months[0], true)}–${monthLabel(months[11], true)}`;
 }
 
 /* 12-bar mini chart, scaled to that indicator's own max */
@@ -248,11 +259,11 @@ function sparkline(monthly) {
 
 function coverageLine(project, year) {
   const cov = yearCoverage(project, year);
-  return `Based on ${cov} tracked month${cov === 1 ? "" : "s"} in ${year}.`;
+  return `Based on ${cov} tracked month${cov === 1 ? "" : "s"} in ${periodLabel(project, year)}.`;
 }
 
-function toCsv(rows, year) {
-  const head = ["Indicator", "Unit", ...MONTHS.map((m) => `${m} ${year}`), "Total"];
+function toCsv(project, rows, year) {
+  const head = ["Indicator", "Unit", ...periodMonthsForYear(project, year).map((k) => monthLabel(k)), "Total"];
   const lines = rows.map((r) => [
     `"${r.descriptor.replace(/"/g, '""')}"`,
     r.unit,

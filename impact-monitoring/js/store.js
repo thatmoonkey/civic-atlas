@@ -299,14 +299,40 @@ export function periodMonths(project) {
   return out;
 }
 
+function monthDiff(a, b) {
+  const [ay, am] = a.split("-").map(Number);
+  const [by, bm] = b.split("-").map(Number);
+  return (by - ay) * 12 + (bm - am);
+}
+
+/* Reports run on the project's own 12-month cycle (rooted at startMonth),
+   not the calendar year — a July-starting project's "year" is Jul–Jun.
+   The "year" label is the calendar year that cycle STARTS in, so a January
+   starter's reporting year lines up exactly with the calendar year (no
+   migration needed for existing Jan-start data, incl. the seeded examples). */
+export function periodMonthsForYear(project, year) {
+  if (!project.startMonth) {
+    return Array.from({ length: 12 }, (_, m) => `${year}-${String(m + 1).padStart(2, "0")}`);
+  }
+  const monthPart = project.startMonth.slice(5, 7);
+  return Array.from({ length: 12 }, (_, i) => addMonthsKey(`${year}-${monthPart}`, i));
+}
+
+/* Which reporting-year label a real calendar month belongs to. */
+export function periodYearForMonth(project, monthKey) {
+  if (!project.startMonth) return Number(monthKey.slice(0, 4));
+  const periodsElapsed = Math.floor(monthDiff(project.startMonth, monthKey) / 12);
+  return Number(addMonthsKey(project.startMonth, periodsElapsed * 12).slice(0, 4));
+}
+
 export function annualTotals(project, year) {
   // { actId: { total, monthly: [12 values or null] } }
+  const months = periodMonthsForYear(project, year);
   const out = {};
   for (const a of project.activities) {
     const monthly = [];
     let total = 0;
-    for (let m = 1; m <= 12; m++) {
-      const key = `${year}-${String(m).padStart(2, "0")}`;
+    for (const key of months) {
       const v = project.months[key]?.[a.id];
       monthly.push(v ?? null);
       if (typeof v === "number") total += v;
@@ -316,13 +342,9 @@ export function annualTotals(project, year) {
   return out;
 }
 
-/* How much of a calendar year has data: 0..12 months. */
+/* How much of a reporting year has data: 0..12 months. */
 export function yearCoverage(project, year) {
-  let n = 0;
-  for (let m = 1; m <= 12; m++) {
-    if (monthHasData(project, `${year}-${String(m).padStart(2, "0")}`)) n++;
-  }
-  return n;
+  return periodMonthsForYear(project, year).filter((k) => monthHasData(project, k)).length;
 }
 
 export function setupProgress(project) {
