@@ -919,7 +919,29 @@ input[type="number"] { text-align: center; font-weight: 700; font-size: 1.1rem; 
   body { background: #fff; }
   .grain, .tabbar, .masthead, .no-print, #toast-root { display: none !important; }
   .app { padding: 0; max-width: none; }
-  .card { box-shadow: none; border-color: #ccc; break-inside: avoid; }
+
+  /* Each report section is a self-contained unit: never split it across a
+     page boundary — if it doesn't fit in what's left of the page, push the
+     whole thing to the top of the next page instead. */
+  .card, .timecapsule {
+    box-shadow: none;
+    border-color: #ccc;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep a heading glued to the content that follows it. */
+  .card h2, .card h3, .timecapsule .eyebrow {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  /* Rows within a section (table rows, month-by-month bars) shouldn't split
+     mid-row either, even if the section itself has to break. */
+  .report-table tr, .spark-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
 }
 
 @media (min-width: 561px) {
