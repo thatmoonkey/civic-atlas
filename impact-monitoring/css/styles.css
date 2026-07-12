@@ -780,6 +780,30 @@ input[type="number"] { text-align: center; font-weight: 700; font-size: 1.1rem; 
   border: 1px solid var(--line);
 }
 
+/* tile size modifiers — apply to both the emoji tile and the photo thumb */
+.tile--lg { width: 72px; height: 72px; font-size: 2.2rem; border-radius: 18px; }
+.tile--mast { width: 30px; height: 30px; font-size: 1rem; border-radius: 50%; }
+
+/* project look picker (emoji + background colour) */
+.look-picker { display: flex; flex-direction: column; gap: 8px; }
+.look-top { display: flex; gap: 12px; align-items: center; margin-bottom: 4px; }
+.look-top .small { margin: 0; }
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.emoji-chip {
+  width: 40px; height: 40px; font-size: 1.3rem;
+  display: grid; place-items: center; padding: 0;
+  border: 1.5px solid var(--line); border-radius: 12px;
+  background: var(--card); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.emoji-chip.selected { border-color: var(--green); box-shadow: 0 0 0 2px rgba(46, 93, 63, 0.25); }
+.swatch {
+  width: 36px; height: 36px; border-radius: 50%; padding: 0;
+  border: 2px solid rgba(0, 0, 0, 0.08); cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.swatch.selected { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--green); }
+
 /* year chips with data coverage */
 .year-strip { display: flex; gap: 8px; flex-wrap: wrap; }
 .year-chip {

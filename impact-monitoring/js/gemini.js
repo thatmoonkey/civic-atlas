@@ -54,6 +54,16 @@ export async function transcribeVoice(base64, mimeType) {
   );
 }
 
+// Match a project name to a fitting emoji + one colour from the allowed set.
+export async function suggestProjectLook(name, colorNames) {
+  const out = await generate(
+    `A community project is called "${name}". Pick a single emoji that best represents it, and choose ONE background colour whose name fits its theme from this exact list: ${colorNames.join(", ")}.
+Return JSON: {"emoji": "one emoji", "color": "one colour name from the list"}.`,
+    { json: true }
+  );
+  return { emoji: out.emoji || "", color: out.color || "" };
+}
+
 // Turn a big-picture vision into ONE realistic, measurable one-year goal.
 // This is the intermediary step: the vision stays a dream, the goal is the
 // stepping stone that activities and monthly numbers can actually flow from.

@@ -1,6 +1,6 @@
 // Minimal app-shell cache. The app is always-online by design (build brief §6.2);
 // this only makes installs feel instant — data never lives here.
-const CACHE = "ca-mne-shell-v12";
+const CACHE = "ca-mne-shell-v13";
 const SHELL = [
   "./",
   "index.html",

@@ -1,6 +1,6 @@
-import { el, toast, busy, dotSays, dotAvatar, withCounter, voiceButton, openSheet, pickPhoto, currentMonthKey } from "../ui.js";
+import { el, toast, busy, dotSays, dotAvatar, withCounter, voiceButton, openSheet, pickPhoto, lookPicker, TILE_COLORS, colorHex, currentMonthKey } from "../ui.js";
 import { save, debouncedSave, limits, canAddActivity, addActivity, removeActivity, setupProgress } from "../store.js";
-import { hasKey, draftYearGoal, suggestActivities, suggestIndicators } from "../gemini.js";
+import { hasKey, draftYearGoal, suggestActivities, suggestIndicators, suggestProjectLook } from "../gemini.js";
 
 // Setup flow: name & photo page → clean Dot vision page → journey
 // (vision → one-year goal → activities → indicators). The vision stays a big
@@ -26,6 +26,8 @@ function renderNamePage(root, project, rerender) {
     oninput: () => { project.name = nameInput.value; debouncedSave(); },
   });
 
+  const picker = lookPicker(project, () => debouncedSave());
+
   const photoSlot = el("div", {});
   const drawPhoto = () => {
     photoSlot.innerHTML = "";
@@ -42,29 +44,45 @@ function renderNamePage(root, project, rerender) {
         el("button", {
           class: "btn btn--ghost btn--block",
           onclick: () => pickPhoto((dataUrl) => { project.photo = dataUrl; save(); drawPhoto(); }),
-        }, "📷 Add or take a photo (optional)")
+        }, "📷 …or use a photo instead")
       );
     }
   };
   drawPhoto();
 
+  const contBtn = el("button", { class: "btn btn--primary btn--block" }, "Continue →");
+  contBtn.onclick = async () => {
+    if (!nameInput.value.trim()) return toast("Give your project a name first");
+    project.name = nameInput.value.trim();
+    project.named = true;
+    // no photo and nothing chosen → let Dot match a look to the name
+    if (!project.photo && (!project.emoji || !project.color) && hasKey()) {
+      busy(contBtn, true, "Dot is picking a look…");
+      try {
+        const look = await suggestProjectLook(project.name, TILE_COLORS.map((c) => c.name));
+        if (!project.emoji && look.emoji) project.emoji = look.emoji;
+        if (!project.color && look.color) project.color = colorHex(look.color) || project.color;
+      } catch { /* fall through to defaults */ }
+      busy(contBtn, false);
+    }
+    // guarantee a tile can always render
+    if (!project.photo) {
+      if (!project.emoji) project.emoji = "🌱";
+      if (!project.color) project.color = "#dce8d9";
+    }
+    save();
+    rerender();
+  };
+
   root.append(
     el("div", { class: "reveal" },
-      dotSays("A new project! First things first — what's it called? A photo helps too: something that shows what this is all about.", true)
+      dotSays("A new project! First things first — what's it called? Then give it a look: an emoji and colour (or a photo). Leave the look to me and I'll match it to the name.", true)
     ),
     el("div", { class: "stack reveal", style: "margin-top:18px" },
       el("label", { class: "field" }, el("span", {}, "Project name"), nameInput),
+      picker,
       photoSlot,
-      el("button", {
-        class: "btn btn--primary btn--block",
-        onclick: () => {
-          if (!nameInput.value.trim()) return toast("Give your project a name first");
-          project.name = nameInput.value.trim();
-          project.named = true;
-          save();
-          rerender();
-        },
-      }, "Continue →")
+      contBtn
     )
   );
 }
@@ -243,21 +261,23 @@ function goalPanel(project, rerender, navigate, showCTA) {
     stack.append(genBtn);
   }
 
-  stack.append(
-    el("div", { class: `draft${locked ? " draft--locked" : ""}` }, outTa),
-    locked ? null : voiceButton(outTa),
-    showCTA
-      ? el("button", {
-          class: "btn btn--primary btn--small",
-          onclick: () => {
-            if (!outTa.value.trim()) return toast("Set a goal for the year first");
-            project.outcome = outTa.value.trim();
-            save();
-            rerender();
-          },
-        }, "That's my goal →")
-      : null
-  );
+  // Append conditionally — never pass null to the native .append(), which
+  // would stringify it into a literal "null" text node.
+  stack.append(el("div", { class: `draft${locked ? " draft--locked" : ""}` }, outTa));
+  if (!locked) stack.append(voiceButton(outTa));
+  if (showCTA) {
+    stack.append(
+      el("button", {
+        class: "btn btn--primary btn--small",
+        onclick: () => {
+          if (!outTa.value.trim()) return toast("Set a goal for the year first");
+          project.outcome = outTa.value.trim();
+          save();
+          rerender();
+        },
+      }, "That's my goal →")
+    );
+  }
   return stack;
 }
 

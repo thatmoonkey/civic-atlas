@@ -51,6 +51,7 @@ function exampleProject() {
     wrapped: true,
     name: "Park Cleanup Committee",
     emoji: "🌳",
+    color: "#dce8d9",
     photo: null,
     named: true,
     vision: "A clean, safe, accessible Harmony Park that acts as a green hub for our community in Cape Town.",
@@ -102,6 +103,7 @@ function stokvelProject() {
     wrapped: true,
     name: "Ubuntu Investment Stokvel",
     emoji: "💰",
+    color: "#f7ecd2",
     photo: null,
     named: true,
     vision: "A financially resilient stokvel where every member grows their savings and can lean on the group when times are hard.",
@@ -128,7 +130,8 @@ function blankProject() {
     kind: "blank",
     wrapped: false,
     name: "",
-    emoji: "🌱",
+    emoji: null,
+    color: null,
     photo: null,
     named: false,
     vision: "",
@@ -156,6 +159,8 @@ function migrate(s) {
   for (const p of s.projects) {
     if (p.named === undefined) p.named = p.setupDone || (!!p.name && p.name !== "My Project");
     if (p.photo === undefined) p.photo = null;
+    if (p.color === undefined) p.color = null;
+    if (p.emoji === undefined) p.emoji = null;
     if (!p.reflections) p.reflections = {};
     if (p.startMonth === undefined || (p.setupDone && !p.startMonth)) {
       p.startMonth = p.kind === "example" ? "2026-01" : p.setupDone ? thisMonthKey() : null;

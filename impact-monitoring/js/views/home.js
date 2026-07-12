@@ -1,4 +1,4 @@
-import { el, toast } from "../ui.js";
+import { el, toast, projectTile } from "../ui.js";
 import { getState, limits, setupProgress, canAddProject, canDeleteProject, addProject, deleteProject } from "../store.js";
 
 export function renderHome(root, navigate) {
@@ -57,9 +57,7 @@ function projectCard(p, navigate) {
     onclick: () => navigate(`#/p/${p.id}`),
   },
     el("div", { class: "row" },
-      p.photo
-        ? el("img", { class: "project-thumb", src: p.photo, alt: "" })
-        : el("div", { class: "project-emoji" }, p.emoji || "🌱"),
+      projectTile(p),
       el("div", { class: "grow" },
         el("div", { class: "row row--between" }, el("h3", {}, p.name || "New project"), badge),
         el("p", { class: "tagline" }, tagline)

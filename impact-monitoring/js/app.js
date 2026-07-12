@@ -1,4 +1,4 @@
-import { el, openSheet, pickPhoto, toast } from "./ui.js";
+import { el, openSheet, pickPhoto, toast, lookPicker, projectTile } from "./ui.js";
 import { load, save, getProject, setupProgress, setSaveHook, mergeRemote } from "./store.js";
 import { initAuth, isSignedIn, fetchRemoteState, pushRemoteState } from "./supabase.js";
 import { renderHome } from "./views/home.js";
@@ -25,13 +25,11 @@ function projectHeader(project) {
   return el("header", { class: "masthead no-print" },
     el("a", { class: "back-link", href: "#/" }, "← Projects"),
     el("div", { class: "row", style: "gap:8px" },
-      project.photo
-        ? el("img", { class: "project-thumb", style: "width:30px;height:30px;border-radius:50%", src: project.photo, alt: "" })
-        : el("span", { style: "font-size:1.3rem" }, project.emoji || "🌱"),
+      projectTile(project, "tile--mast"),
       el("strong", { style: "font-family:var(--font-display);font-size:1rem" }, project.name || "New project"),
       project.named && !project.wrapped
         ? el("button", {
-            class: "btn--icon btn", style: "width:32px;height:32px;font-size:0.85rem", "aria-label": "Edit name & photo",
+            class: "btn--icon btn", style: "width:32px;height:32px;font-size:0.85rem", "aria-label": "Edit project look & name",
             onclick: () => openProjectEditSheet(project),
           }, "✎")
         : null
@@ -39,9 +37,10 @@ function projectHeader(project) {
   );
 }
 
-/* edit name & photo later (design ask: editable after creation) */
+/* edit name, look (emoji + colour) & photo later (design ask: editable anytime) */
 function openProjectEditSheet(project) {
   const nameInput = el("input", { type: "text", value: project.name, maxlength: "60" });
+  const picker = lookPicker(project, () => {});
   const photoSlot = el("div", {});
   const drawPhoto = () => {
     photoSlot.innerHTML = "";
@@ -58,7 +57,7 @@ function openProjectEditSheet(project) {
         el("button", {
           class: "btn btn--ghost btn--block",
           onclick: () => pickPhoto((dataUrl) => { project.photo = dataUrl; drawPhoto(); }),
-        }, "📷 Add or take a photo")
+        }, "📷 …or use a photo instead")
       );
     }
   };
@@ -66,8 +65,9 @@ function openProjectEditSheet(project) {
 
   const close = openSheet(
     el("div", { class: "stack" },
-      el("h2", {}, "Name & photo"),
+      el("h2", {}, "Name & look"),
       el("label", { class: "field" }, el("span", {}, "Project name"), nameInput),
+      picker,
       photoSlot,
       el("button", {
         class: "btn btn--primary btn--block",

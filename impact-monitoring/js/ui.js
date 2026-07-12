@@ -150,6 +150,74 @@ export function pickPhoto(cb) {
   setTimeout(() => inp.remove(), 120000);
 }
 
+/* ---- project "look": emoji + background colour ---- */
+
+export const TILE_COLORS = [
+  { name: "green", hex: "#dce8d9" },
+  { name: "sand", hex: "#f1ead9" },
+  { name: "terracotta", hex: "#f4e0d0" },
+  { name: "amber", hex: "#f7ecd2" },
+  { name: "sky", hex: "#dbe6ee" },
+  { name: "rose", hex: "#f2dfe0" },
+  { name: "lilac", hex: "#e5ddef" },
+  { name: "teal", hex: "#d5e8e2" },
+];
+
+export const EMOJI_CHOICES = [
+  "🌱", "🌳", "🌍", "💧", "♻️", "🐾", "🏘️", "🤝", "❤️", "📚",
+  "🎨", "⚽", "🍲", "💰", "🔧", "🏥", "🌻", "✨",
+];
+
+export function colorHex(name) {
+  return (TILE_COLORS.find((c) => c.name === name) || {}).hex || null;
+}
+
+/* Consistent project avatar: photo if present, else the emoji on its colour. */
+export function projectTile(project, cls = "") {
+  if (project.photo) return el("img", { class: `project-thumb ${cls}`.trim(), src: project.photo, alt: "" });
+  const bg = project.color || "var(--green-tint)";
+  return el("div", { class: `project-emoji ${cls}`.trim(), style: `background:${bg}` }, project.emoji || "🌱");
+}
+
+/* Emoji + colour picker. Mutates project.emoji / project.color and calls
+   onChange after each pick. Leaving both null lets Dot match them to the name. */
+export function lookPicker(project, onChange) {
+  const preview = el("div", {});
+  const drawPreview = () => { preview.innerHTML = ""; preview.append(projectTile(project, "tile--lg")); };
+  drawPreview();
+
+  const emojiRow = el("div", { class: "chip-row" });
+  const colorRow = el("div", { class: "chip-row" });
+
+  const refresh = () => {
+    [...emojiRow.children].forEach((b) => b.classList.toggle("selected", b.dataset.emoji === project.emoji));
+    [...colorRow.children].forEach((b) => b.classList.toggle("selected", b.dataset.hex === project.color));
+    drawPreview();
+    onChange?.();
+  };
+
+  EMOJI_CHOICES.forEach((e) => {
+    emojiRow.append(el("button", {
+      type: "button", class: "emoji-chip", "data-emoji": e,
+      onclick: () => { project.emoji = e; refresh(); },
+    }, e));
+  });
+  TILE_COLORS.forEach((c) => {
+    colorRow.append(el("button", {
+      type: "button", class: "swatch", "data-hex": c.hex, style: `background:${c.hex}`, "aria-label": c.name,
+      onclick: () => { project.color = c.hex; refresh(); },
+    }));
+  });
+  refresh();
+
+  return el("div", { class: "look-picker" },
+    el("div", { class: "look-top" }, preview,
+      el("p", { class: "small" }, "Pick an emoji and colour — or leave them and Dot will match them to your name.")),
+    el("p", { class: "field-label" }, "Emoji"), emojiRow,
+    el("p", { class: "field-label", style: "margin-top:10px" }, "Colour"), colorRow
+  );
+}
+
 /* Voice note → Dot transcribes & tidies into the textarea. Max 15s. */
 const VOICE_MAX_S = 15;
 
