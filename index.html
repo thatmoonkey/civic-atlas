@@ -66,6 +66,7 @@
   .btn--primary { background: var(--ink); color: var(--paper); }
   .btn--primary:hover { background: #262c3b; }
   .btn--ghost { border: 2px solid var(--ink); color: var(--ink); padding: 10px 22px; }
+  .btn--small { font-size: 0.82rem; padding: 9px 18px; }
 
   /* hero */
   header.hero { text-align: center; padding: 52px 0 64px; }
@@ -221,7 +222,10 @@
 
   <nav>
     <img src="img/ca-wide.svg" alt="Civic Atlas" />
-    <a class="nav-link" href="#about">About</a>
+    <div style="display:flex; align-items:center; gap:18px;">
+      <a class="nav-link" href="#about">About</a>
+      <a class="btn btn--primary btn--small" href="/impact-monitoring/">Open the app</a>
+    </div>
   </nav>
 
   <header class="hero">
@@ -229,8 +233,8 @@
     <h1 class="brand-word">Civic Atlas</h1>
     <p class="tag">Simple tools that help community groups see — and show — the change they're making.</p>
     <div class="cta-row">
-      <a class="btn btn--primary" href="#work">What we do</a>
-      <a class="btn btn--ghost" href="#about">Meet the founder</a>
+      <a class="btn btn--primary" href="/impact-monitoring/">Try Impact Monitoring →</a>
+      <a class="btn btn--ghost" href="#work">What we do</a>
     </div>
   </header>
 
@@ -245,6 +249,7 @@
         <h3>Impact Monitoring</h3>
         <p>A phone-first tool that turns a plain-language idea into a theory of change, a handful of activities, and one number a month to track — all rolling up into a funder-ready annual report.</p>
         <span class="status">Prototype live</span>
+        <p style="margin-top:12px"><a href="/impact-monitoring/" style="color:var(--ink); font-weight:800; font-size:0.9rem; text-decoration:none; border-bottom:2px solid var(--sand);">Try it →</a></p>
       </div>
       <div class="card">
         <h3>What's next</h3>

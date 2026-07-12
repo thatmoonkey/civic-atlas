@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Dot — literally a dot. Round, warm, blinks at you. -->
+  <style>
+    .eye {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: blink 4.6s infinite ease-in-out;
+    }
+    .eye--l { animation-delay: 0s; }
+    .eye--r { animation-delay: 0.02s; }
+    @keyframes blink {
+      0%, 91%, 100% { transform: scaleY(1); }
+      94%, 96% { transform: scaleY(0.08); }
+    }
+    .sprout {
+      transform-box: fill-box;
+      transform-origin: bottom center;
+      animation: sway 5.5s infinite ease-in-out;
+    }
+    @keyframes sway {
+      0%, 100% { transform: rotate(-4deg); }
+      50% { transform: rotate(5deg); }
+    }
+  </style>
+  <defs>
+    <radialGradient id="body" cx="0.35" cy="0.3" r="1">
+      <stop offset="0%" stop-color="#eebf62"/>
+      <stop offset="55%" stop-color="#e0a83c"/>
+      <stop offset="100%" stop-color="#cf9127"/>
+    </radialGradient>
+  </defs>
+
+  <!-- little leaf sprout on top -->
+  <g class="sprout">
+    <path d="M100 26 C 100 18, 100 12, 100 8" stroke="#2e5d3f" stroke-width="5" stroke-linecap="round" fill="none"/>
+    <path d="M100 12 C 92 12, 84 8, 82 0 C 92 -1, 99 4, 100 12 Z" fill="#2e5d3f"/>
+    <path d="M100 14 C 107 13, 114 9, 116 2 C 107 1, 101 6, 100 14 Z" fill="#4a7d58"/>
+  </g>
+
+  <!-- the dot herself -->
+  <circle cx="100" cy="112" r="84" fill="url(#body)"/>
+  <circle cx="100" cy="112" r="84" fill="none" stroke="#b57e1e" stroke-width="3" opacity="0.55"/>
+  <!-- soft highlight -->
+  <ellipse cx="68" cy="70" rx="26" ry="16" fill="#ffffff" opacity="0.35" transform="rotate(-24 68 70)"/>
+
+  <!-- eyes (they blink) -->
+  <ellipse class="eye eye--l" cx="72" cy="106" rx="9" ry="12" fill="#21301f"/>
+  <ellipse class="eye eye--r" cx="128" cy="106" rx="9" ry="12" fill="#21301f"/>
+  <circle cx="75" cy="101" r="3" fill="#ffffff"/>
+  <circle cx="131" cy="101" r="3" fill="#ffffff"/>
+
+  <!-- rosy cheeks -->
+  <circle cx="58" cy="128" r="10" fill="#c2622e" opacity="0.35"/>
+  <circle cx="142" cy="128" r="10" fill="#c2622e" opacity="0.35"/>
+
+  <!-- smile -->
+  <path d="M84 134 C 92 144, 108 144, 116 134" stroke="#21301f" stroke-width="6" stroke-linecap="round" fill="none"/>
+</svg>

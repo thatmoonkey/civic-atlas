@@ -1,0 +1,12 @@
+{
+  "name": "Impact Monitoring — Civic Atlas",
+  "short_name": "Impact Mon.",
+  "description": "Plan, track and report your community project's social impact.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f5f0e4",
+  "theme_color": "#2e5d3f",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
