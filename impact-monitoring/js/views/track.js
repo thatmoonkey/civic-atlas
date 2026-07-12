@@ -88,6 +88,21 @@ export function renderTrack(root, project, state) {
       })
     );
     root.append(sheet);
+
+    // explicit forward affordance — values already autosave on blur, but
+    // there's no obvious way to move on without this (client feedback).
+    if (!viewOnly) {
+      const idx = period.indexOf(state.trackMonth);
+      const nextKey = period[idx + 1];
+      if (nextKey) {
+        root.append(
+          el("button", {
+            class: "btn btn--primary btn--block reveal", style: "margin-top:12px",
+            onclick: () => { state.trackMonth = nextKey; state.rerender(); },
+          }, `Saved ✓ — next: ${monthLabel(nextKey, true)} →`)
+        );
+      }
+    }
   }
 
   if (!viewOnly) {

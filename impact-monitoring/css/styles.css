@@ -649,6 +649,12 @@ input[type="number"] { text-align: center; font-weight: 700; font-size: 1.1rem; 
   position: relative;
   overflow: hidden;
 }
+.timecapsule--locked {
+  border-style: dashed;
+  background: linear-gradient(165deg, #fbf6ef, #f3ece0);
+}
+/* two-class selector beats the base .timecapsule::before regardless of order */
+.timecapsule.timecapsule--locked::before { content: "LOCKED"; opacity: 0.85; }
 .timecapsule::before {
   content: "TIME CAPSULE";
   position: absolute;

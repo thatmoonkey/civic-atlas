@@ -1,10 +1,11 @@
 import { el, toast, busy, dotSays, dotAvatar, withCounter, voiceButton, openSheet, pickPhoto, currentMonthKey } from "../ui.js";
 import { save, debouncedSave, limits, canAddActivity, addActivity, removeActivity, setupProgress } from "../store.js";
-import { hasKey, draftTheoryOfChange, suggestActivities, suggestIndicators } from "../gemini.js";
+import { hasKey, draftYearGoal, suggestActivities, suggestIndicators } from "../gemini.js";
 
 // Setup flow: name & photo page → clean Dot vision page → journey
-// (ToC → activities → indicators). Everything autosaves; only the step
-// currently being filled in shows a continue button.
+// (vision → one-year goal → activities → indicators). The vision stays a big
+// dream; the goal is the realistic stepping stone that activities flow from.
+// Everything autosaves; only the step currently being filled shows a CTA.
 
 const UNIT_PRESETS = ["people", "events", "kg", "meetings", "posts", "visitors", "bags", "hours", "R", "$"];
 
@@ -80,7 +81,7 @@ function renderVisionPage(root, project, rerender) {
 
   root.append(
     el("div", { class: "reveal" },
-      dotSays("Let's start with the big picture. In a sentence or two: what's the change you want to see? Don't overthink it — say it like you'd say it to a neighbour.", true)
+      dotSays("Let's start with the big picture — dream as big as you like. In a sentence or two: what's the change you ultimately want to see? Don't worry about being realistic yet — say it like you'd say it to a neighbour.", true)
     ),
     el("div", { class: "stack reveal", style: "margin-top:18px" },
       withCounter(ta),
@@ -93,7 +94,7 @@ function renderVisionPage(root, project, rerender) {
           save();
           rerender();
         },
-      }, "Continue to Theory of Change →")
+      }, "Continue to your one-year goal →")
     )
   );
 }
@@ -104,7 +105,7 @@ function renderVisionPage(root, project, rerender) {
 function renderJourney(root, project, navigate, rerender) {
   const stageDone = [
     !!project.vision.trim(),
-    !!(project.toc.trim() && project.outcome.trim()),
+    !!project.outcome.trim(),
     project.activities.length > 0 && project.activities.every((a) => a.label.trim()),
     project.activities.length > 0 && project.activities.every((a) => a.indicator.descriptor.trim() && a.indicator.unit.trim()),
   ];
@@ -133,9 +134,9 @@ function renderJourney(root, project, navigate, rerender) {
   root.append(journey);
 
   const steps = [
-    { title: "Your vision", hint: "The big picture, in a sentence or two.", panel: visionPanel },
-    { title: "Theory of change", hint: "If we do this, then that will change.", panel: tocPanel },
-    { title: "Activities", hint: `What you'll actually do — up to ${limits().activities}.`, panel: activitiesPanel },
+    { title: "Your vision", hint: "The big dream, in a sentence or two.", panel: visionPanel },
+    { title: "Your goal for this year", hint: "One realistic thing to reach in 12 months.", panel: goalPanel },
+    { title: "Activities", hint: `What you'll do to reach it — up to ${limits().activities}.`, panel: activitiesPanel },
     { title: "Monthly numbers", hint: "One simple number per activity.", panel: indicatorsPanel },
   ];
 
@@ -202,61 +203,59 @@ function visionPanel(project, rerender, navigate, showCTA) {
   );
 }
 
-/* step 2 — theory of change + outcome */
-function tocPanel(project, rerender, navigate, showCTA) {
+/* step 2 — the one-year goal (stored in project.outcome). This is the
+   realistic stepping stone the rest of the plan flows from. Dot can
+   optionally shrink the big vision into a measurable goal. */
+function goalPanel(project, rerender, navigate, showCTA) {
   const locked = project.wrapped;
   const stack = el("div", { class: "stack" });
 
-  const tocTa = el("textarea", {
-    placeholder: "If we ..., then ...",
-    disabled: locked,
-    oninput: () => { project.toc = tocTa.value; debouncedSave(); },
-  }, project.toc);
   const outTa = el("textarea", {
-    placeholder: "By the end of the year, ...",
-    style: "min-height:72px",
+    placeholder: "By this time next year, ...",
+    style: "min-height:90px", maxlength: "200",
     disabled: locked,
     oninput: () => { project.outcome = outTa.value; debouncedSave(); },
   }, project.outcome);
+
+  if (!locked) {
+    stack.append(
+      el("p", { class: "hint" },
+        "Your vision is the dream. This is one realistic, countable thing to reach within a year — small enough that a few monthly numbers can show your progress.")
+    );
+  }
 
   if (hasKey() && !locked) {
     const genBtn = el("button", {
       class: "btn btn--terra btn--small",
       onclick: async () => {
-        const seed = project.vision || project.name;
-        busy(genBtn, true, "Drafting…");
+        if (!project.vision.trim()) return toast("Add your vision first — Dot builds the goal from it");
+        busy(genBtn, true, "Thinking…");
         try {
-          const d = await draftTheoryOfChange(seed);
-          tocTa.value = project.toc = d.toc;
-          outTa.value = project.outcome = d.outcome;
+          outTa.value = project.outcome = await draftYearGoal(project.vision);
           save();
-          toast("Dot's draft is in — edit it until it sounds like you");
+          toast("Dot's suggestion is in — edit it until it fits");
         } catch {
           toast("Dot couldn't get through right now — try again in a moment");
         }
         busy(genBtn, false);
       },
-    }, dotAvatar(true), "Ask Dot to draft it");
+    }, dotAvatar(true), "Ask Dot to suggest a goal");
     stack.append(genBtn);
   }
 
   stack.append(
-    el("div", { class: `draft${locked ? " draft--locked" : ""}` }, tocTa),
-    el("label", { class: "field" },
-      el("span", {}, "Outcome to check in a year"),
-      el("div", { class: `draft${locked ? " draft--locked" : ""}` }, outTa)
-    ),
+    el("div", { class: `draft${locked ? " draft--locked" : ""}` }, outTa),
+    locked ? null : voiceButton(outTa),
     showCTA
       ? el("button", {
           class: "btn btn--primary btn--small",
           onclick: () => {
-            if (!tocTa.value.trim() || !outTa.value.trim()) return toast("Fill in both parts first");
-            project.toc = tocTa.value.trim();
+            if (!outTa.value.trim()) return toast("Set a goal for the year first");
             project.outcome = outTa.value.trim();
             save();
             rerender();
           },
-        }, "Sounds right — next →")
+        }, "That's my goal →")
       : null
   );
   return stack;
@@ -274,7 +273,7 @@ function activitiesPanel(project, rerender, navigate, showCTA) {
       onclick: async () => {
         busy(genBtn, true, "Suggesting…");
         try {
-          const ideas = await suggestActivities(project.toc, lim);
+          const ideas = await suggestActivities(project.outcome, lim);
           ideas.forEach((label) => addActivity(project, label));
           toast("Dot's ideas are in — cut what doesn't fit");
           rerender();

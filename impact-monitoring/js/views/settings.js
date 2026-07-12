@@ -26,7 +26,7 @@ export function renderSettings(root, navigate) {
         )
       ),
       el("p", { class: "small", style: "margin:10px 0 0" },
-        "Dot drafts your theory of change, activities, monthly numbers and report narrative wherever you see her.")
+        "Dot helps shape your one-year goal, suggests activities and monthly numbers, and writes your report — wherever you see her.")
     )
   );
 

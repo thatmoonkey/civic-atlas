@@ -321,10 +321,10 @@ export function yearCoverage(project, year) {
 }
 
 export function setupProgress(project) {
-  // 4 setup stages: vision, toc(+outcome), activities, indicators
+  // 4 setup stages: vision, one-year goal (outcome), activities, indicators
   let done = 0;
   if (project.vision.trim()) done++;
-  if (project.toc.trim() && project.outcome.trim()) done++;
+  if (project.outcome.trim()) done++;
   if (project.activities.length > 0 && project.activities.every((a) => a.label.trim())) done++;
   if (
     project.activities.length > 0 &&

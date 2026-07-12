@@ -38,8 +38,8 @@ export function renderReport(root, project, state) {
       el("p", { style: "margin-top:8px;font-family:var(--font-display);font-size:1.05rem;line-height:1.4" }, project.vision),
       project.photo ? el("img", { class: "vision-photo", src: project.photo, alt: "Project photo" }) : null,
       el("hr", { class: "divider" }),
-      el("p", { class: "field-label" }, "Our theory of change"),
-      el("p", { style: "font-size:0.95rem" }, project.toc)
+      el("p", { class: "field-label" }, "Our goal for this year"),
+      el("p", { style: "font-size:0.95rem" }, project.outcome)
     )
   );
 
@@ -87,51 +87,81 @@ export function renderReport(root, project, state) {
     );
   }
 
-  /* time capsule reflection */
+  /* time capsule reflection — the year-end mirror. Locked until a full 12
+     months of data is in, so reflecting is a genuine end-of-year moment.
+     Wrapped examples are finished demos, so they always show it. */
   const locked = project.wrapped;
-  const evTa = el("textarea", {
-    placeholder: "What actually happened? What did you see change? What would you do differently?",
-    disabled: locked,
-    oninput: () => { refl.evidence = evTa.value; debouncedSave(); },
-  }, refl.evidence);
-  const quoteIn = el("input", {
-    type: "text", placeholder: "Optional: a quote from someone in the community", maxlength: "200", disabled: locked,
-    oninput: () => { refl.quote = quoteIn.value; debouncedSave(); },
-    value: refl.quote,
-  });
+  const monthsTracked = yearCoverage(project, year);
+  const capsuleReady = project.wrapped || monthsTracked >= 12;
 
-  stack.append(
-    el("div", { class: "timecapsule reveal" },
-      el("p", { class: "eyebrow", style: "color:var(--terra-deep)" }, "At the start of the year, you said:"),
-      el("blockquote", {}, `“${project.outcome}”`),
-      el("div", { class: "stack no-print", style: "margin-top:14px" },
-        el("label", { class: "field" }, el("span", {}, "A year later — how did it go?"), withCounter(evTa)),
-        locked ? null : voiceButton(evTa),
-        quoteIn
-      ),
-      refl.evidence
-        ? el("div", { class: "stack", style: "margin-top:12px" },
-            el("p", { class: "field-label" }, "Our reflection"),
-            el("p", { style: "font-size:0.95rem" }, refl.evidence),
-            refl.quote ? el("p", { style: "font-style:italic;color:var(--terra-deep)" }, `“${refl.quote}”`) : null
-          )
-        : null
-    )
-  );
+  if (!capsuleReady) {
+    stack.append(
+      el("div", { class: "timecapsule timecapsule--locked reveal" },
+        el("p", { class: "eyebrow", style: "color:var(--terra-deep)" }, "🔒 Your time capsule"),
+        el("p", { style: "margin-top:8px;font-size:0.95rem" },
+          `At the start you set a goal for this year. Once all 12 months are tracked, Dot opens your time capsule — you'll see the goal again and reflect on how it really went. ${monthsTracked} of 12 months in so far.`),
+        el("div", { class: "meter", style: "margin-top:12px" },
+          el("i", { style: `width:${Math.round((monthsTracked / 12) * 100)}%` }))
+      )
+    );
+  } else {
+    const evTa = el("textarea", {
+      placeholder: "What actually happened? What did you see change? What would you do differently?",
+      disabled: locked,
+      oninput: () => { refl.evidence = evTa.value; debouncedSave(); },
+    }, refl.evidence);
+    const quoteIn = el("input", {
+      type: "text", placeholder: "Optional: a quote from someone in the community", maxlength: "200", disabled: locked,
+      oninput: () => { refl.quote = quoteIn.value; debouncedSave(); },
+      value: refl.quote,
+    });
 
-  /* narrative */
-  const narrCard = el("div", { class: "card reveal" }, el("h3", {}, "Report narrative"));
+    stack.append(
+      el("div", { class: "timecapsule reveal" },
+        el("p", { class: "eyebrow", style: "color:var(--terra-deep)" }, "At the start of the year, you said:"),
+        el("blockquote", {}, `“${project.outcome}”`),
+        el("div", { class: "stack no-print", style: "margin-top:14px" },
+          el("label", { class: "field" }, el("span", {}, "A year later — how did it go?"), withCounter(evTa)),
+          locked ? null : voiceButton(evTa),
+          quoteIn
+        ),
+        refl.evidence
+          ? el("div", { class: "stack", style: "margin-top:12px" },
+              el("p", { class: "field-label" }, "Our reflection"),
+              el("p", { style: "font-size:0.95rem" }, refl.evidence),
+              refl.quote ? el("p", { style: "font-style:italic;color:var(--terra-deep)" }, `“${refl.quote}”`) : null
+            )
+          : null
+      )
+    );
+  }
+
+  /* narrative — a full year report once 12 months are in, otherwise a
+     progress snapshot that ignores the (still-locked) time-capsule inputs */
+  const fullYear = capsuleReady;
+  const narrCard = el("div", { class: "card reveal" },
+    el("h3", {}, fullYear ? "Report narrative" : "Progress update"));
   if (refl.narrative) {
     narrCard.append(el("p", { style: "margin-top:10px" }, md(refl.narrative)));
   }
   if (hasKey() && !locked) {
+    if (!fullYear) {
+      narrCard.append(
+        el("p", { class: "small", style: "margin-top:8px" },
+          "Dot writes from your numbers so far. Your full year report and time capsule open once all 12 months are in.")
+      );
+    }
     const genBtn = el("button", {
       class: "btn btn--terra btn--small no-print", style: "margin-top:12px",
       onclick: async () => {
         if (!anyData) return toast("Track some months first — Dot writes from your totals");
         busy(genBtn, true, "Dot is writing…");
         try {
-          refl.narrative = await draftAnnualNarrative(project, year, rows, refl.evidence);
+          refl.narrative = await draftAnnualNarrative(
+            project, year, rows,
+            fullYear ? refl.evidence : "",
+            { fullYear, monthsTracked }
+          );
           save();
           toast("Dot's draft is ready");
           state.rerender();
@@ -140,7 +170,10 @@ export function renderReport(root, project, state) {
           busy(genBtn, false);
         }
       },
-    }, dotAvatar(true), refl.narrative ? "Ask Dot to redraft it" : "Ask Dot to write it");
+    }, dotAvatar(true),
+      fullYear
+        ? (refl.narrative ? "Ask Dot to redraft it" : "Ask Dot to write it")
+        : (refl.narrative ? "Ask Dot to redraft the update" : "Ask Dot for a progress update"));
     narrCard.append(genBtn);
   }
   stack.append(narrCard);

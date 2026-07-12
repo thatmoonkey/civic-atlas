@@ -54,23 +54,31 @@ export async function transcribeVoice(base64, mimeType) {
   );
 }
 
-export async function draftTheoryOfChange(goalText) {
+// Turn a big-picture vision into ONE realistic, measurable one-year goal.
+// This is the intermediary step: the vision stays a dream, the goal is the
+// stepping stone that activities and monthly numbers can actually flow from.
+export async function draftYearGoal(vision) {
   const out = await generate(
-    `The group describes what they want to achieve as: "${goalText}"
+    `The group's big-picture vision is: "${vision}"
 
-Write JSON with exactly these fields:
-- "toc": one single "If ..., then ..." theory of change sentence (max 40 words).
-- "outcome": one medium-term outcome sentence starting with "By the end of the year," (max 30 words), concrete and observable.`,
+That vision is their long-term dream. Help them set ONE realistic, concrete goal they could actually reach in the NEXT 12 MONTHS — a single stepping stone toward the vision, not the whole vision.
+
+The goal MUST be:
+- Small and specific enough that progress can be counted with simple monthly numbers (how many, how much, how often)
+- Realistically achievable by a small volunteer group in one year
+- One warm, plain sentence starting with "By this time next year,"
+
+Return JSON: {"goal": "..."} — max 30 words, no jargon.`,
     { json: true }
   );
-  return { toc: out.toc || "", outcome: out.outcome || "" };
+  return out.goal || "";
 }
 
-export async function suggestActivities(toc, max) {
+export async function suggestActivities(goal, max) {
   const out = await generate(
-    `Their theory of change: "${toc}"
+    `Their goal for the next year: "${goal}"
 
-Suggest ${Math.min(max, 5)} concrete recurring activities the group could realistically run to deliver this. Each must be countable month to month.
+Suggest ${Math.min(max, 5)} concrete recurring activities the group could realistically run each month to reach this goal. Each must be countable month to month.
 Return JSON: {"activities": ["...", "..."]} — each activity max 10 words, plain verbs, no numbering.`,
     { json: true }
   );
@@ -90,21 +98,41 @@ Return JSON: {"indicators": [{"descriptor": "...", "unit": "..."}]} in the same 
   return out.indicators || [];
 }
 
-export async function draftAnnualNarrative(project, year, totalsRows, reflection) {
+// Two modes:
+//  - full year (all 12 months tracked): a complete annual report that weaves
+//    in the group's own year-end reflection (time-capsule inputs).
+//  - progress (fewer months in): a mid-year snapshot of progress so far, which
+//    ignores any reflection and never writes as if the year were finished.
+export async function draftAnnualNarrative(project, year, totalsRows, reflection, { fullYear = true, monthsTracked = 12 } = {}) {
+  const span = fullYear ? "over the year" : "so far";
   const totals = totalsRows
-    .map((r) => `- ${r.descriptor}: ${r.total} ${r.unit} over the year`)
+    .map((r) => `- ${r.descriptor}: ${r.total} ${r.unit} ${span}`)
     .join("\n");
-  return generate(
-    `Write the narrative section of a short annual report on behalf of the group "${project.name}" for ${year}. It may be read by a funder, or simply by the project team looking back at their year — write so it works for both.
+
+  if (!fullYear) {
+    return generate(
+      `Write a short PROGRESS UPDATE (not a finished annual report) on behalf of the group "${project.name}", covering ${year} SO FAR — ${monthsTracked} month${monthsTracked === 1 ? "" : "s"} of tracking in.
 
 Their vision: "${project.vision}"
-Their theory of change: "${project.toc}"
-The outcome they aimed for: "${project.outcome}"
+The goal they set for this year: "${project.outcome}"
+What the numbers say so far:
+${totals}
+
+Write 2 to 3 short paragraphs, first person plural ("we"), warm and honest. This is a mid-year snapshot: describe how things are going so far and progress toward the goal. Do NOT write as if the year is finished, do NOT invent a year-end reflection or results that haven't happened yet, and use ONLY the totals above (no invented numbers). Max 150 words.
+Bold the 3 to 5 most skim-worthy phrases (key results so far) by wrapping them in **double asterisks**.`
+    );
+  }
+
+  return generate(
+    `Write the narrative section of a full annual report on behalf of the group "${project.name}" for ${year} — all 12 months are now complete. It may be read by a funder, or simply by the project team looking back at their year — write so it works for both.
+
+Their vision: "${project.vision}"
+The goal they set for this year: "${project.outcome}"
 What the numbers say:
 ${totals}
 The group's own reflection on the year: "${reflection || "(none given)"}"
 
-Write 3 short paragraphs, first person plural ("we"), warm and honest, no headings, no bullet points, no invented numbers — only use the totals above. Max 180 words.
+Write 3 short paragraphs, first person plural ("we"), warm and honest, no headings, no bullet points, no invented numbers — only use the totals above. Weave in the group's own reflection where it fits naturally. Max 180 words.
 Bold the 3 to 6 most skim-worthy phrases (key results and the strongest moments) by wrapping them in **double asterisks** — so someone skimming catches the heart of the year.`
   );
 }
