@@ -39,9 +39,11 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
     padding: 20px 0;
   }
-  nav img { height: 26px; display: block; }
+  nav img { height: 26px; display: block; max-width: 100%; }
   nav a.nav-link {
     font-family: var(--sans);
     font-weight: 800;
@@ -54,6 +56,7 @@
 
   .btn {
     display: inline-block;
+    white-space: nowrap;
     font-family: var(--sans);
     font-weight: 800;
     font-size: 0.95rem;
@@ -231,7 +234,7 @@
   <header class="hero">
     <div class="hero-bars" aria-hidden="true"><i></i><i></i><i></i></div>
     <h1 class="brand-word">Civic Atlas</h1>
-    <p class="tag">Simple tools that help community groups see — and show — the change they're making.</p>
+    <p class="tag">Research, evaluation and practical tools for understanding — and strengthening — social change.</p>
     <div class="cta-row">
       <a class="btn btn--primary" href="/impact-monitoring/">Try Impact Monitoring →</a>
       <a class="btn btn--ghost" href="#work">What we do</a>
@@ -241,19 +244,19 @@
   <section id="work">
     <p class="kicker">What we do</p>
     <h2>Impact tracking, without the jargon.</h2>
-    <p>Most community groups are brilliant at doing the work and never get shown how to <strong>prove</strong> it. Funders ask for indicators, baselines and results frameworks — language built for organisations with a full-time measurement team, not a park cleanup committee or a street-level stokvel working from a phone.</p>
-    <p>Civic Atlas builds radically simple tools that put real impact monitoring — planning, tracking and reporting — into the hands of the people actually doing the work.</p>
+    <p>Most community groups are brilliant at doing the work and never get shown how to <strong>prove</strong> it. Funders ask for indicators, baselines and results frameworks — language built for organisations with a full-time measurement team, not a park cleanup committee or a stokvel working from a phone.</p>
+    <p>Alongside its research and evaluation work, Civic Atlas builds radically simple tools that put impact monitoring — planning, tracking and reporting — into the hands of the people actually doing the work.</p>
 
     <div class="cards">
       <div class="card">
         <h3>Impact Monitoring</h3>
-        <p>A phone-first tool that turns a plain-language idea into a theory of change, a handful of activities, and one number a month to track — all rolling up into a funder-ready annual report.</p>
+        <p>A phone-first tool that turns a plain-language idea into a theory of change, a handful of activities, and a few numbers a month to track — all rolling up into a funder-ready annual report.</p>
         <span class="status">Prototype live</span>
         <p style="margin-top:12px"><a href="/impact-monitoring/" style="color:var(--ink); font-weight:800; font-size:0.9rem; text-decoration:none; border-bottom:2px solid var(--sand);">Try it →</a></p>
       </div>
       <div class="card">
         <h3>What's next</h3>
-        <p>Civic Atlas is just getting started. This site is a placeholder — more tools, resources and writing for community groups and small NGOs are on the way.</p>
+        <p>Civic Atlas is just getting started. This site is a placeholder — more tools and resources are on the way.</p>
         <span class="status">In progress</span>
       </div>
     </div>
@@ -262,7 +265,7 @@
   <section id="about">
     <div class="founder">
       <p class="kicker">Why it exists</p>
-      <h2>Built by someone who's read a thousand donor reports.</h2>
+      <h2>Built by a researcher who knows evidence is only valuable when people can use it.</h2>
       <div class="founder-head">
         <img class="founder-photo" src="img/kate-photo.jpg" alt="Kate Lefko-Everett" />
         <div class="names">
@@ -270,10 +273,10 @@
           <p class="role">Founder, Civic Atlas</p>
         </div>
       </div>
-      <p>Kate is a Cape Town–based social researcher who has spent nearly two decades designing, running and evaluating research on social change — from leading the South African Reconciliation Barometer at the Institute for Justice and Reconciliation, to social cohesion work with UCT and the UNDP, to advising corporate social investors on measurement and strategy.</p>
-      <p>Across all of it, the same pattern: <strong>the groups doing the most tangible good are the least equipped to report on it.</strong> Professional impact monitoring is a discipline with its own vocabulary, and the vocabulary keeps small organisations locked out of funding they've already earned.</p>
-      <p>Civic Atlas is her answer — take everything that actually matters in tracking impact, remove everything that doesn't, and put it in the hands of the people doing the work. If a committee can run a cleanup, it can track one. If it can track one, it can report one. And if it can report one, it can fund the next.</p>
-      <p class="cred">MSc Applied Social Research, Trinity College Dublin · formerly Institute for Justice and Reconciliation · published on social cohesion, migration and reconciliation · unapologetic lover of statistics.</p>
+      <p>Kate is a Cape Town–based social researcher with nearly two decades of experience designing, managing and evaluating research on social change. Her work has ranged from leading the South African Reconciliation Barometer to advising non-profits, funders and corporate social investors on research, measurement and strategy.</p>
+      <p>Across this work, she has seen how often useful evidence gets buried in technical language, complicated processes and reports that are difficult to act on. <strong>Civic Atlas was created to offer a clearer approach:</strong> rigorous research, practical evaluation and simple tools that help organisations understand their work, improve it and communicate it well.</p>
+      <p>The Civic Atlas impact monitoring app is one part of that approach, designed to make basic planning, monitoring and reporting more accessible to smaller organisations and community groups.</p>
+      <p class="cred">MSc Applied Social Research, Trinity College Dublin · Visiting Research Fellow, Wits School of Governance · published on social cohesion, migration and reconciliation · gets excited about statistics.</p>
     </div>
   </section>
 
